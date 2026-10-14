@@ -34,7 +34,7 @@ def select_corrections(weights: np.ndarray, q: Quantized, k: int, method: str,
         raise ValueError('quantizer shape mismatch')
     if not 0 <= k <= w.size:
         raise ValueError('invalid correction count')
-    if method not in {'magnitude', 'sensitivity', 'random', 'none'}:
+    if method not in {'magnitude', 'sensitivity', 'random', 'none', 'smallest'}:
         raise ValueError('unknown method')
     residual = w - dequantize(q)
     if method == 'none' or k == 0:
@@ -50,6 +50,14 @@ def select_corrections(weights: np.ndarray, q: Quantized, k: int, method: str,
         scores = np.abs(residual) * input_rms[:, None]
     elif method == 'magnitude':
         scores = np.abs(residual)
+    elif method == 'smallest':
+        # Adverse diagnostic, NOT a guaranteed underperforming arm.
+        # Stable ascending original-residual magnitude, then flat index.
+        indices = np.argsort(
+            np.abs(residual).ravel(), kind='stable'
+        )[:k]
+        indices = np.sort(indices).astype(np.int64)
+        return indices, residual.ravel()[indices]
     else:
         indices = np.sort(np.random.default_rng(seed).choice(w.size, k, replace=False))
         return indices.astype(np.int64), residual.ravel()[indices]

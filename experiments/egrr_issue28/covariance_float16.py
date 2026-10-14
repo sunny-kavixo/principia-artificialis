@@ -6,7 +6,7 @@ import numpy as np
 from egrr import dequantize
 
 
-def select_covariance_float16(weights, q, k, calibration):
+def select_covariance_float16(weights, q, k, calibration, *, return_diagnostics=False):
     w = np.asarray(weights, dtype=np.float64)
     x = np.asarray(calibration, dtype=np.float64)
 
@@ -47,6 +47,7 @@ def select_covariance_float16(weights, q, k, calibration):
 
     remaining = residual.copy()
     selected = np.zeros(w.shape, dtype=bool)
+    selected_gains = []
     diagonal = np.diag(covariance)[:, None]
 
     for _ in range(k):
@@ -63,10 +64,22 @@ def select_covariance_float16(weights, q, k, calibration):
         gains[selected] = -np.inf
         flat_index = int(np.argmax(gains))
         row, col = np.unravel_index(flat_index, w.shape)
+        selected_gains.append(float(gains[row, col]))
 
         remaining[row, col] -= correction[row, col]
         selected[row, col] = True
 
     indices = np.flatnonzero(selected).astype(np.int64)
     values = correction.ravel()[indices]
-    return indices, values
+    if not return_diagnostics:
+        return indices, values
+
+    gain_array = np.asarray(selected_gains, dtype=np.float64)
+    diagnostics = {
+        "selected_gains": gain_array,
+        "negative_gain_count": int(np.count_nonzero(gain_array < 0)),
+        "zero_gain_count": int(np.count_nonzero(gain_array == 0)),
+        "positive_gain_count": int(np.count_nonzero(gain_array > 0)),
+        "selection_count": int(len(gain_array)),
+    }
+    return indices, values, diagnostics

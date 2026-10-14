@@ -22,7 +22,11 @@ interval, or population P1 success verdict is proposed.
 ## 2. Proposed case identities
 
 Case IDs: 000 through 099.
-Proposed seeds: 280000 through 280099, inclusive.
+Proposed descriptive seeds: 380000 through 380099, inclusive.
+
+The original population-P1 proposed seeds 280000 through
+280099 remain RESERVED and will NOT be generated, inspected,
+or reused for this descriptive study.
 
 For each case use NumPy default_rng(case_seed), PCG64.
 
@@ -36,10 +40,11 @@ Random correction arm uses default_rng(case_seed + 1000000).
 
 All evaluation inputs remain inaccessible to selectors.
 
-These seeds were previously proposed for the population
-study; using them for this descriptive exercise would
-make them ineligible as untouched future P1 confirmation
-cases. Final seed choice requires maintainer review.
+The descriptive seed block is disjoint from the original
+population-P1 proposal. Once any descriptive seed is executed,
+that seed is consumed and cannot serve as untouched future
+confirmation data. The final block and execution identity
+require maintainer review before freeze.
 
 No cases have been generated for this draft.
 
@@ -88,11 +93,13 @@ Additional arms:
 - Input-RMS sensitivity
 - Seeded random selection
 - Uncorrected quantization
-- Smallest-residual diagnostic, pending implementation
+- Smallest-abs(R) diagnostic, implemented and locally tested
 
-Currently magnitude and RMS rank original residual R.
-Covariance gains use storable float16-rounded correction A.
-This discrepancy requires an explicit review decision.
+Magnitude ranks abs(R); RMS ranks abs(R)*input_rms.
+Covariance uses float16-rounded A for greedy marginal gains.
+This is an intentional comparison of distinct selection rules.
+Every corrected arm stores and decodes float16 corrections.
+A constructed R-versus-A ranking fixture is locally tested.
 Ties are resolved by stable flattened index where specified.
 
 Same-byte equality is required for corrected arms.
@@ -123,8 +130,11 @@ mean is UNDEFINED. Preserve all case records and failures.
 If an instrument or integrity gate fails, report
 INSTRUMENT_FAILED; never omit or regenerate cases.
 
-The MSE_magnitude <= 1e-12 tolerance is PROVISIONAL.
-The maintainer must approve or replace it before freeze.
+Descriptive ratio policy: require finite nonnegative MSEs and
+MSE_magnitude > 0. Tiny positive baselines are flagged, not
+censored. Undefined/nonfinite ratios remain visible, and any
+undefined case makes the full 100-case mean UNDEFINED.
+No extra denominator tolerance is adopted in this draft.
 
 ## 7. Numbered draft observational predictions
 
@@ -143,17 +153,27 @@ GATE: FAIL and a nonzero exit.
 D4: All generated cases must receive a visible
 record or explicit failure category. No filtering.
 
-D5: Descriptive covariance improvement may be
-positive, zero or negative. No minimum gain is predicted.
+D5: Constructed MSE pairs (0.8,1), (1,1), (1.2,1)
+must retain improvements +0.2, 0, -0.2 respectively,
+within absolute tolerance 1e-12. A planted deletion of
+the negative record must produce GATE: FAIL and exit 1.
+No positive compression improvement is predicted.
 
 These are proposed observations/instrument expectations,
 not a registered population-improvement prediction.
 
 ## 8. Outstanding instrumentation
 
-- Implement or explicitly exclude negative-gain diagnostics.
-- Implement the smallest-residual diagnostic arm.
-- Specify exact calibration-MSE arithmetic.
+- Optional negative/zero/positive selected-gain diagnostics
+  are implemented and locally tested; exactly-K preserved.
+- Smallest-abs(R) diagnostic is implemented and locally tested.
+- Calibration MSE uses float64:
+  mean((X_cal @ (W - W_hat_decoded))**2).
+- Evaluation MSE uses float64:
+  mean((X_eval @ (W - W_hat_decoded))**2).
+- Both use serialized, decoded reconstructions.
+- Reject empty/nonfinite inputs and invalid results.
+- Report calibration and evaluation failures separately.
 - Resolve R-versus-A ranking and tie behavior.
 - Define structured per-case failure and verdict codes.
 - Add benign and planted-sabotage cases for each
@@ -164,20 +184,30 @@ not a registered population-improvement prediction.
 ## 9. M16 triggered-control assessment — DRAFT
 
 C-FEAS: No — no finite external eligibility pool.
-C-NOISE: Review — deterministic arithmetic is intended;
-  establish whether platform/BLAS behavior triggers it.
-C-STAT: No population statistical decision is proposed;
-  reassess if sample-derived inference is introduced.
+C-NOISE: Yes — floating-point/BLAS reproducibility may
+  vary. A constructed covariance fixture was evaluated three
+  times on one macOS ARM64 environment. All three returned
+  indices (1,2), 41 serialized bytes, MSE 0.029296875,
+  and SHA256 prefix 29da0954767ac6f5.
+  Observed within-fixture spread: zero.
+  Cross-platform reproducibility remains unverified.
+C-STAT: No population estimation or inferential verdict
+  is proposed. The 100 named cases form the descriptive
+  target itself; no p-value, confidence claim or alpha
+  decision is authorized. Reassess if inference is added.
 C-EVID: No — evidence quality is not the outcome.
 C-INDEP: No independent replication is claimed.
 C-EXT: Yes — external prior art and reviews used.
-C-DEVICE: Review — runtime is pinned for reproducibility;
-  no device-performance claim is proposed.
+C-DEVICE: No — this study makes no device-performance
+  comparison or platform advantage claim. The macOS ARM64
+  runtime is recorded for reproducibility only. Reassess
+  if files move between machines or device claims arise.
 C-BUILD: Yes — instrument returns fail-closed verdicts.
 C-EXPLORE: Yes — prior exploratory work informed design.
-C-METHCOMP: Yes — several selection methods compared;
-  applicability of the referenced comparison protocol
-  needs maintainer resolution.
+C-METHCOMP: Yes — methods are compared. The referenced
+  methodology-comparison experiment is specific to its own
+  separate study, not a reusable generic procedure. This
+  study requires its own W2 registration and controls.
 
 All unresolved triggers must be resolved before freeze.
 The canonical methodology is unchanged.
@@ -208,7 +238,7 @@ is authorized by the current review.
 ## 12. Next unrun checkpoint
 
 Review the proposed descriptive case matrix and the
-missing negative-gain/diagnostic instrumentation before
+remaining control and instrumentation validation before
 any research cases are generated.
 
 Status remains DESIGN ONLY / NOT RUN.
