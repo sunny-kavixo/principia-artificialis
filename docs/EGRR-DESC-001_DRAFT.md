@@ -174,12 +174,97 @@ not a registered population-improvement prediction.
 - Both use serialized, decoded reconstructions.
 - Reject empty/nonfinite inputs and invalid results.
 - Report calibration and evaluation failures separately.
-- Resolve R-versus-A ranking and tie behavior.
+- R-versus-A ranking is resolved for this draft:
+  magnitude and RMS use original R; covariance uses
+  float16-rounded A. Constructed tie fixtures pass.
 - Define structured per-case failure and verdict codes.
 - Add benign and planted-sabotage cases for each
   applicable guard, including numerical failures.
 - Pin source, exact commands, data formats, digests
   and resource definitions before any execution.
+
+## 8A. Planned result format and failure policy
+
+This section specifies a proposed future output contract.
+No 100-case result files currently exist.
+
+After explicit authorization, a future instrument should
+produce one structured JSON record for every case ID
+000 through 099, in ascending case-ID order.
+
+Each record must include:
+
+- study ID, case ID, seed, source commit and environment
+- generator identity and draw-order specification
+- method name, correction count and actual EGR2 bytes
+- payload SHA-256 and successful decode/integrity status
+- calibration output MSE and evaluation output MSE
+- paired improvement when numerically defined
+- positive, zero and negative selected-gain counts
+- selected correction indices and diagnostic-arm identity
+- numerical failure category and error details
+
+Proposed per-case status vocabulary:
+
+VALID: all required operations and values are valid.
+
+UNDEFINED_RATIO: magnitude MSE is zero, or the ratio
+or improvement cannot be represented as a finite value.
+
+INVALID_NUMERIC: a required input, reconstruction or MSE
+is invalid, negative, nonfinite or encounters a rejected
+floating-point arithmetic condition.
+
+SERIALIZATION_ERROR: payload construction, decoding,
+checksum, index validation or round-trip integrity fails.
+
+INSTRUMENT_FAILED: a required gate, output-completeness
+check or other instrument invariant fails.
+
+All cases must retain their original case IDs. No failed
+case may be replaced, skipped or silently regenerated.
+
+If any case has an undefined improvement, the complete
+100-case arithmetic mean is reported UNDEFINED. A partial
+mean must not be substituted for the full-set statistic.
+
+A structural/instrument failure prevents a passing
+instrument verdict, regardless of other measurements.
+
+Future evidence files should include raw per-case records,
+a complete failure manifest, exact commands, stdout/stderr,
+exit codes, environment details and source identities.
+
+Proposed canonical JSON and digest policy (REVIEW ONLY):
+
+- Output encoding: UTF-8, without BOM.
+- JSON key order: lexicographic ascending using sort_keys=True.
+- Separators: comma and colon without additional spaces.
+- NaN/Infinity JSON literals are prohibited (allow_nan=False).
+- Undefined numerical fields use JSON null plus an explicit
+  failure category and case ID; never substitute zero.
+- Preserve case records ordered by ascending integer case ID.
+- No extra trailing newline in the hashed canonical payload.
+- Hash SHA-256 over the exact UTF-8 canonical JSON bytes.
+- Preserve floating-point values as finite Python float
+  representations from the pinned runtime; no early rounding.
+- The full precision and cross-platform representation policy
+  remains subject to maintainer review.
+
+Proposed Python encoder:
+json.dumps(records, sort_keys=True,
+           separators=(",", ":"), allow_nan=False,
+           ensure_ascii=False).encode("utf-8")
+
+Store the resulting SHA-256 digest alongside raw records,
+the software environment, source identities and exact
+future execution command. Never invent missing hashes.
+
+This specification is a draft proposal, NOT FROZEN.
+No study result file or digest has been produced.
+
+No population p-value, confidence interval or hypothesis
+success verdict is part of this descriptive result contract.
 
 ## 9. M16 triggered-control assessment — DRAFT
 
