@@ -22,7 +22,7 @@ def score_case(case_id, seed, covariance_mse, magnitude_mse):
 
     try:
         mag = float(magnitude_mse)
-        if math.isfinite(mag) and 0 < mag < TINY_BASELINE_THRESHOLD:
+        if math.isfinite(mag) and 0 < mag <= TINY_BASELINE_THRESHOLD:
             record["tiny_positive_baseline"] = True
 
         record["improvement"] = relative_improvement(
@@ -145,8 +145,8 @@ def complete_report(
 
 # Proposed descriptive schema — constructed fixtures only.
 REQUIRED_ARMS = frozenset({
-    "covariance", "magnitude", "sensitivity",
-    "random", "uncorrected", "smallest",
+    "covariance", "magnitude", "input_rms",
+    "random", "uncorrected", "smallest_residual",
 })
 
 
@@ -287,21 +287,41 @@ def build_failure_manifest(
 
         for item in manifest:
             case_id = item["case_id"]
-            if type(case_id) is int and item["status"] == "VALID":
-                if case_id not in expected_seeds:
-                    item["status"] = "SEED_MAPPING_MISSING"
-                    item["reason"] = "expected case seed absent from mapping"
-                    item["arm_status"] = "INSTRUMENT_FAILED"
+            item["seed_status"] = "NOT_APPLICABLE"
+
+            if item["status"] == "MISSING_CASE":
+                continue
+
+            if type(case_id) is not int:
+                continue
+
+            if case_id not in expected_seeds:
+                seed_status = "SEED_MAPPING_MISSING"
+            else:
+                expected_seed = expected_seeds[case_id]
+                if (
+                    type(expected_seed) is not int
+                    or type(item["seed"]) is not int
+                    or item["seed"] != expected_seed
+                ):
+                    seed_status = "SEED_MISMATCH"
                 else:
-                    expected_seed = expected_seeds[case_id]
-                    if (
-                        type(expected_seed) is not int
-                        or type(item["seed"]) is not int
-                        or item["seed"] != expected_seed
-                    ):
-                        item["status"] = "SEED_MISMATCH"
-                        item["reason"] = "case seed does not match registration"
-                        item["arm_status"] = "INSTRUMENT_FAILED"
+                    seed_status = "VALID"
+
+            item["seed_status"] = seed_status
+
+            if seed_status != "VALID":
+                item["arm_status"] = "INSTRUMENT_FAILED"
+
+                # Preserve the original ratio/numeric failure.
+                # Retain legacy status for otherwise VALID records.
+                if item["status"] == "VALID":
+                    item["status"] = seed_status
+                    item["reason"] = (
+                        "expected case seed absent from mapping"
+                        if seed_status == "SEED_MAPPING_MISSING"
+                        else "case seed does not match registration"
+                    )
 
     if expected_case_ids is not None:
         expected = list(expected_case_ids)

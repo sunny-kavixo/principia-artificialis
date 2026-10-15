@@ -135,6 +135,11 @@ MSE_magnitude > 0. Tiny positive baselines are flagged, not
 censored. Undefined/nonfinite ratios remain visible, and any
 undefined case makes the full 100-case mean UNDEFINED.
 No extra denominator tolerance is adopted in this draft.
+The aggregate consistency check compares a reported paired ratio
+with the ratio recomputed from its canonical arm MSEs using
+`math.isclose(rel_tol=1e-12, abs_tol=1e-15)`. This tolerance is
+only a tamper/consistency check; it does not change, censor or
+round the authoritative float64 ratio.
 
 ## 7. Numbered draft observational predictions
 
@@ -192,17 +197,30 @@ After explicit authorization, a future instrument should
 produce one structured JSON record for every case ID
 000 through 099, in ascending case-ID order.
 
-Each record must include:
+Draft schema identifier: `EGRR-DESC-001-DRAFT-1`.
+Case IDs are exact three-digit strings (`"000"` through `"099"`);
+legacy integer case IDs are not accepted by this envelope.
 
-- study ID, case ID, seed, source commit and environment
-- generator identity and draw-order specification
-- method name, correction count and actual EGR2 bytes
-- payload SHA-256 and successful decode/integrity status
-- calibration output MSE and evaluation output MSE
-- paired improvement when numerically defined
-- positive, zero and negative selected-gain counts
-- selected correction indices and diagnostic-arm identity
-- numerical failure category and error details
+Each immutable case envelope groups:
+
+- `identity`: study ID, case ID, seed, source commit,
+  environment, generator/draw order and per-input hashes;
+- `arms`: exactly `covariance`, `magnitude`, `input_rms`,
+  `random`, `uncorrected`, and `smallest_residual`, each with
+  status/error code, correction metadata, actual serialized byte
+  count, payload SHA-256, decode result, and both MSEs;
+- `pair`: the named covariance-versus-magnitude comparison,
+  status, ratio or null, error code and tiny-denominator warning;
+- `case_status` and append-only `errors`: every observed failure
+  with case ID supplied by the enclosing record, stage, arm,
+  error code and status.
+
+The uncorrected arm has zero corrections. Every corrected arm has
+exactly K=128 unique, nonnegative correction indices. Payload
+integrity requires actual bytes: a well-formed digest string alone
+does not establish byte count or SHA-256 agreement. `decode_ok`
+records an instrument result and is not a claim that a separate
+decoder independently reproduced reconstruction quality.
 
 Proposed per-case status vocabulary:
 
@@ -246,15 +264,16 @@ Proposed canonical JSON and digest policy (REVIEW ONLY):
 - Preserve case records ordered by ascending integer case ID.
 - No extra trailing newline in the hashed canonical payload.
 - Hash SHA-256 over the exact UTF-8 canonical JSON bytes.
-- Preserve floating-point values as finite Python float
-  representations from the pinned runtime; no early rounding.
-- The full precision and cross-platform representation policy
-  remains subject to maintainer review.
+- Encode every authoritative finite float64 as the exact
+  big-endian IEEE-754 bit pattern: 16 lowercase hexadecimal
+  characters from `struct.pack(">d", value).hex()`.
+- Preserve signed zero. Optional decimal previews are
+  non-authoritative and must not replace the hexadecimal evidence.
+- This stabilizes serialization, not floating-point arithmetic;
+  no cross-platform byte-identical result is claimed.
 
-Proposed Python encoder:
-json.dumps(records, sort_keys=True,
-           separators=(",", ":"), allow_nan=False,
-           ensure_ascii=False).encode("utf-8")
+The draft implementation exports each case envelope to this exact
+float representation before applying the canonical JSON encoder.
 
 Store the resulting SHA-256 digest alongside raw records,
 the software environment, source identities and exact

@@ -78,8 +78,8 @@ class CaseRecordTests(unittest.TestCase):
 
     def test_six_arm_validation(self):
         names = (
-            "covariance", "magnitude", "sensitivity",
-            "random", "uncorrected", "smallest",
+            "covariance", "magnitude", "input_rms",
+            "random", "uncorrected", "smallest_residual",
         )
 
         def fixture():
@@ -97,7 +97,7 @@ class CaseRecordTests(unittest.TestCase):
         self.assertEqual(validate_six_arms(fixture()), "VALID")
 
         missing = fixture()
-        del missing["smallest"]
+        del missing["smallest_residual"]
         self.assertEqual(
             validate_six_arms(missing), "INSTRUMENT_FAILED"
         )
@@ -127,7 +127,7 @@ class CaseRecordTests(unittest.TestCase):
         )
 
         bytes_error = fixture()
-        bytes_error["smallest"]["serialized_bytes"] = -1
+        bytes_error["smallest_residual"]["serialized_bytes"] = -1
         self.assertEqual(
             validate_six_arms(bytes_error), "INSTRUMENT_FAILED"
         )
@@ -137,8 +137,8 @@ class CaseRecordTests(unittest.TestCase):
 
     def test_six_arm_report_integration(self):
         names = (
-            "covariance", "magnitude", "sensitivity",
-            "random", "uncorrected", "smallest",
+            "covariance", "magnitude", "input_rms",
+            "random", "uncorrected", "smallest_residual",
         )
 
         def arms():
@@ -168,7 +168,7 @@ class CaseRecordTests(unittest.TestCase):
 
         broken = score_case(0, 900, 0.8, 1.0)
         broken["arms"] = arms()
-        del broken["arms"]["smallest"]
+        del broken["arms"]["smallest_residual"]
         result = complete_report([broken], [0], require_six_arms=True)
         self.assertEqual(result["status"], "INSTRUMENT_FAILED")
 
@@ -182,8 +182,8 @@ class CaseRecordTests(unittest.TestCase):
 
     def test_paired_mse_mismatch_rejected(self):
         names = (
-            "covariance", "magnitude", "sensitivity",
-            "random", "uncorrected", "smallest",
+            "covariance", "magnitude", "input_rms",
+            "random", "uncorrected", "smallest_residual",
         )
         record = score_case(0, 900, 0.8, 1.0)
         record["arms"] = {
@@ -224,8 +224,8 @@ class CaseRecordTests(unittest.TestCase):
 
     def test_forged_improvement_rejected(self):
         names = (
-            "covariance", "magnitude", "sensitivity",
-            "random", "uncorrected", "smallest",
+            "covariance", "magnitude", "input_rms",
+            "random", "uncorrected", "smallest_residual",
         )
 
         def fixture():
@@ -262,8 +262,8 @@ class CaseRecordTests(unittest.TestCase):
 
     def test_mixed_failure_precedence(self):
         names = (
-            "covariance", "magnitude", "sensitivity",
-            "random", "uncorrected", "smallest",
+            "covariance", "magnitude", "input_rms",
+            "random", "uncorrected", "smallest_residual",
         )
 
         def fixture(case_id, cov, mag):
@@ -488,6 +488,27 @@ class CaseRecordTests(unittest.TestCase):
                         "INSTRUMENT_FAILED",
                     )
 
+
+    def test_undefined_ratio_does_not_hide_seed_mismatch(self):
+        """Constructed case: score failure must not hide identity failure."""
+        from descriptive_case_record import build_failure_manifest
+
+        record = score_case(0, 999, 0.5, 0.0)
+        self.assertEqual(record["status"], "UNDEFINED_RATIO")
+
+        manifest = build_failure_manifest(
+            [record],
+            expected_case_ids=[0],
+            expected_seeds={0: 900},
+        )
+
+        self.assertEqual(len(manifest), 1)
+        self.assertEqual(manifest[0]["status"], "UNDEFINED_RATIO")
+        self.assertEqual(
+            manifest[0].get("seed_status"),
+            "SEED_MISMATCH",
+            "Seed mismatch must be independently reported even when ratio fails",
+        )
 
     def test_finite_set_mean_overflow(self):
         records = [
