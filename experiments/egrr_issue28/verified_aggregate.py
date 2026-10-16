@@ -43,12 +43,19 @@ def verified_aggregate(
             "code": code, "status": status,
         })
 
-    expected = list(expected_case_ids) if type(expected_case_ids) is list else []
+    fixed_case_ids = [f"{index:03d}" for index in range(100)]
+    expected = (
+        list(expected_case_ids)
+        if type(expected_case_ids) is list
+        and all(type(case_id) is str for case_id in expected_case_ids)
+        else []
+    )
+    seeds = expected_seeds if type(expected_seeds) is dict else {}
     registration_valid = (
-        expected == [f"{index:03d}" for index in range(100)]
+        expected == fixed_case_ids
         and type(expected_seeds) is dict
-        and set(expected_seeds) == set(expected)
-        and all(type(expected_seeds[k]) is int and expected_seeds[k] >= 0
+        and set(seeds) == set(expected)
+        and all(type(seeds[k]) is int and seeds[k] >= 0
                 for k in expected)
     )
     if not registration_valid:
@@ -80,72 +87,80 @@ def verified_aggregate(
             continue
         identity = record.get("identity")
         case_id = identity.get("case_id") if type(identity) is dict else None
-        if case_id in seen:
+        manifest_case_id = case_id if type(case_id) is str else None
+        case_id_is_registered = (
+            type(case_id) is str and case_id in expected_set
+        )
+        if case_id_is_registered and case_id in seen:
             failure("DUPLICATE_CASE", case_id, stage="identity")
-        seen.add(case_id)
+        if case_id_is_registered:
+            seen.add(case_id)
 
         try:
             validate_case_identity(identity)
         except (ValueError, TypeError, KeyError):
-            failure("INVALID_CASE_IDENTITY", case_id, stage="identity")
+            failure("INVALID_CASE_IDENTITY", manifest_case_id,
+                    stage="identity")
         if (
-            type(case_id) is not str or case_id not in expected_set
-            or case_id not in expected_seeds
+            not case_id_is_registered
+            or case_id not in seeds
             or type(identity) is not dict
-            or identity.get("seed") != expected_seeds.get(case_id)
+            or identity.get("seed") != seeds.get(case_id)
         ):
-            failure("VERIFIED_CASE_IDENTITY_MISMATCH", case_id,
+            failure("VERIFIED_CASE_IDENTITY_MISMATCH", manifest_case_id,
                     stage="identity")
 
         arms = record.get("arms")
-        payloads = payloads_by_case.get(case_id)
+        payloads = payloads_by_case.get(manifest_case_id)
         if type(arms) is dict and type(payloads) is dict:
             for arm_name in sorted(REQUIRED_ARM_NAMES):
                 arm = arms.get(arm_name)
                 payload = payloads.get(arm_name)
                 if arm_name not in arms or arm_name not in payloads:
-                    failure("MISSING_ARM_OR_PAYLOAD", case_id,
+                    failure("MISSING_ARM_OR_PAYLOAD", manifest_case_id,
                             stage="serialization", arm=arm_name)
                     continue
                 if type(payload) is not bytes:
-                    failure("PAYLOAD_NOT_BYTES", case_id,
+                    failure("PAYLOAD_NOT_BYTES", manifest_case_id,
                             stage="serialization", arm=arm_name)
                     continue
                 if type(arm) is not dict:
-                    failure("INVALID_ARM_EVIDENCE", case_id,
+                    failure("INVALID_ARM_EVIDENCE", manifest_case_id,
                             stage="arms", arm=arm_name)
                     continue
                 if arm.get("serialized_bytes") != len(payload):
-                    failure("SERIALIZED_BYTE_COUNT_MISMATCH", case_id,
+                    failure("SERIALIZED_BYTE_COUNT_MISMATCH", manifest_case_id,
                             stage="serialization", arm=arm_name,
                             status="SERIALIZATION_ERROR")
                 if arm.get("payload_sha256") != hashlib.sha256(payload).hexdigest():
-                    failure("PAYLOAD_HASH_MISMATCH", case_id,
+                    failure("PAYLOAD_HASH_MISMATCH", manifest_case_id,
                             stage="serialization", arm=arm_name,
                             status="SERIALIZATION_ERROR")
                 if arm.get("decode_ok") is not True:
-                    failure("DECODE_FAILURE", case_id,
+                    failure("DECODE_FAILURE", manifest_case_id,
                             stage="serialization", arm=arm_name,
                             status="SERIALIZATION_ERROR")
         else:
-            failure("INVALID_SIX_ARM_CONTAINER", case_id, stage="arms")
+            failure("INVALID_SIX_ARM_CONTAINER", manifest_case_id, stage="arms")
 
         try:
             validate_six_arm_evidence(arms, payloads)
         except (ValueError, TypeError, KeyError, OverflowError):
-            failure("VERIFIED_SIX_ARM_EVIDENCE_FAILED", case_id, stage="arms")
+            failure("VERIFIED_SIX_ARM_EVIDENCE_FAILED", manifest_case_id,
+                    stage="arms")
 
         if record.get("schema_version") != SCHEMA_VERSION:
-            failure("SCHEMA_VERSION_MISMATCH", case_id, stage="canonical")
+            failure("SCHEMA_VERSION_MISMATCH", manifest_case_id,
+                    stage="canonical")
         try:
             canonical = export_case_envelope(record)
             if not verify_evidence_digest(
-                canonical, evidence_digests_by_case.get(case_id)
+                canonical, evidence_digests_by_case.get(manifest_case_id)
             ):
-                failure("EVIDENCE_DIGEST_MISMATCH", case_id,
+                failure("EVIDENCE_DIGEST_MISMATCH", manifest_case_id,
                         stage="canonical")
         except (ValueError, TypeError, KeyError, OverflowError):
-            failure("MALFORMED_CANONICAL_EVIDENCE", case_id,
+            failure("MALFORMED_CANONICAL_EVIDENCE", manifest_case_id,
                     stage="canonical")
 
     if seen != expected_set:
@@ -154,9 +169,13 @@ def verified_aggregate(
     aggregate = None
     if registration_valid and type(records) is list:
         aggregate = aggregate_full_set(
-            detached, expected_case_ids=expected, expected_seeds=expected_seeds
+            detached, expected_case_ids=expected, expected_seeds=seeds
         )
-        failures.extend(aggregate["failure_manifest"])
+        for item in aggregate["failure_manifest"]:
+            normalized = dict(item)
+            if type(normalized.get("case_id")) is not str:
+                normalized["case_id"] = None
+            failures.append(normalized)
 
     if failures:
         order = {case_id: index for index, case_id in enumerate(expected)}

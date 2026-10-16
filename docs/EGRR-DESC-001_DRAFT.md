@@ -195,11 +195,14 @@ No 100-case result files currently exist.
 
 After explicit authorization, a future instrument should
 produce one structured JSON record for every case ID
-000 through 099, in ascending case-ID order.
+`"000"` through `"099"`, ordered lexicographically by the exact
+three-character string (which is also numeric order for this fixed domain).
 
 Draft schema identifier: `EGRR-DESC-001-DRAFT-1`.
 Case IDs are exact three-digit strings (`"000"` through `"099"`);
 legacy integer case IDs are not accepted by this envelope.
+The failure manifest uses this same lexicographic case-ID order;
+entries without a registered case ID follow registered entries.
 
 Each immutable case envelope groups:
 

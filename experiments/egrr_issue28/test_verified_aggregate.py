@@ -199,6 +199,82 @@ class VerifiedAggregateTests(unittest.TestCase):
             "VERIFIED_CASE_IDENTITY_MISMATCH",
         )
 
+    def test_invalid_registration_inputs_fail_closed(self):
+        invalid_registrations = (
+            (None, None),
+            ("000", "not-a-mapping"),
+            ({"000": 900}, {"000": 900}),
+            ([f"{index:03d}" for index in range(99)],
+             {f"{index:03d}": 900 + index for index in range(99)}),
+            ([f"{index:03d}" for index in range(100)],
+             {f"{index:03d}": 900 + index for index in range(99)}),
+            ([f"{index:03d}" for index in range(100)],
+             {**{f"{index:03d}": 900 + index for index in range(100)},
+              "100": 1000}),
+            ([f"{index:03d}" for index in range(100)],
+             {**{f"{index:03d}": 900 + index for index in range(100)},
+              "050": "not-an-integer"}),
+            ([*range(100)], {index: 900 + index for index in range(100)}),
+        )
+        for expected, seeds in invalid_registrations:
+            fixture = constructed_full_set()
+            with self.subTest(expected=expected, seeds_type=type(seeds)):
+                result = verified_aggregate(
+                    fixture[0], payloads_by_case=fixture[1],
+                    evidence_digests_by_case=fixture[2],
+                    expected_case_ids=expected, expected_seeds=seeds,
+                )
+                self.assertEqual(result["run_status"], "INSTRUMENT_FAILED")
+                self.assert_failed_with(result, "INVALID_FIXED_REGISTRATION")
+
+    def test_invalid_top_level_containers_fail_closed(self):
+        fixture = constructed_full_set()
+        for field, value, code in (
+            ("records", None, "INVALID_RECORD_CONTAINER"),
+            ("records", "records", "INVALID_RECORD_CONTAINER"),
+            ("payloads", None, "INVALID_PAYLOAD_CONTAINER"),
+            ("payloads", "payloads", "INVALID_PAYLOAD_CONTAINER"),
+            ("digests", None, "INVALID_EVIDENCE_DIGEST_CONTAINER"),
+            ("digests", "digests", "INVALID_EVIDENCE_DIGEST_CONTAINER"),
+        ):
+            records, payloads, digests, expected, seeds = fixture
+            arguments = {
+                "records": records, "payloads": payloads, "digests": digests,
+            }
+            arguments[field] = value
+            with self.subTest(field=field, value=value):
+                result = verified_aggregate(
+                    arguments["records"], payloads_by_case=arguments["payloads"],
+                    evidence_digests_by_case=arguments["digests"],
+                    expected_case_ids=expected, expected_seeds=seeds,
+                )
+                self.assertEqual(result["run_status"], "INSTRUMENT_FAILED")
+                self.assert_failed_with(result, code)
+
+    def test_malformed_records_and_non_string_ids_fail_closed(self):
+        malformed = (None, "record", {}, {"identity": None},
+                     {"identity": {"case_id": {"unhashable": True}}})
+        for record in malformed:
+            fixture = constructed_full_set()
+            fixture[0][0] = record
+            with self.subTest(record=record):
+                result = self.run_verified(fixture)
+                self.assertEqual(result["run_status"], "INSTRUMENT_FAILED")
+                self.assert_failed_with(result, "VERIFIED_CASE_SET_MISMATCH")
+
+    def test_seed_identity_mismatch_is_structured_and_ordered(self):
+        fixture = constructed_full_set()
+        fixture[0][20]["identity"]["seed"] += 1
+        fixture[0][3]["identity"]["seed"] += 1
+        for index in (20, 3):
+            refresh_digest(fixture[0], fixture[2], index)
+        result = self.run_verified(fixture)
+        mismatches = [
+            item["case_id"] for item in result["failure_manifest"]
+            if item["code"] == "VERIFIED_CASE_IDENTITY_MISMATCH"
+        ]
+        self.assertEqual(mismatches, ["003", "020"])
+
 
 if __name__ == "__main__":
     unittest.main()
