@@ -264,7 +264,8 @@ Proposed canonical JSON and digest policy (REVIEW ONLY):
 - NaN/Infinity JSON literals are prohibited (allow_nan=False).
 - Undefined numerical fields use JSON null plus an explicit
   failure category and case ID; never substitute zero.
-- Preserve case records ordered by ascending integer case ID.
+- Preserve case records ordered lexicographically by the exact
+  three-digit string case ID (`"000"` through `"099"`).
 - No extra trailing newline in the hashed canonical payload.
 - Hash SHA-256 over the exact UTF-8 canonical JSON bytes.
 - Encode every authoritative finite float64 as the exact
