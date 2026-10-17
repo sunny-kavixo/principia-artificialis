@@ -1,0 +1,333 @@
+{
+  "checkout_clean": true,
+  "checkout_commit": "98bb6dacb5ba0b0710ec304309594553ac840a10",
+  "checkout_status": [],
+  "checks": [
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-q",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/test_termux_verify.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_contains": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "sabotage_oracle_control",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/sabotage_oracle_control.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": "1 passed",
+      "stdout_file": "raw/sabotage_oracle_control.stdout.txt",
+      "stdout_sha256": "f4c77b58e2280613a49ba18da1c4a02d440e862c49a6c8fe5daaf277333ff99d"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-q",
+        "test_verified_aggregate.py::VerifiedAggregateTests::test_invalid_registration_inputs_fail_closed"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_contains": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "malformed_registration",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/malformed_registration.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": "1 passed",
+      "stdout_file": "raw/malformed_registration.stdout.txt",
+      "stdout_sha256": "9f4a7f95e59e345e7d2ed2b3a1a1cee50b7454227e26e2f327c37621f4769787"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_contains": true,
+        "stdout_contains": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "full_egrr_regression",
+      "passed": true,
+      "stderr_contains": "Ran 111 tests",
+      "stderr_file": "raw/full_egrr_regression.stderr.txt",
+      "stderr_sha256": "e901df81d549c16bb9c2db10463c56264f937f6a7576f3f159c83d2e8a60c1dc",
+      "stdout_contains": "PASS: six-arm constructed sabotage fixtures",
+      "stdout_file": "raw/full_egrr_regression.stdout.txt",
+      "stdout_sha256": "83db136d6280198187bf217f0c68052b752dedb6806a5fcd7f9bf4e2a64962a3"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-q",
+        "test_egr2_integration.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_contains": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "egr2_integration",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/egr2_integration.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": "4 passed",
+      "stdout_file": "raw/egr2_integration.stdout.txt",
+      "stdout_sha256": "0113061f768ef3d21ee10d928c87c34023e56d5aca9d9983a689818e50f8a48e"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/registered_fixture_gate.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_contains": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "registered_fixture_benign",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/registered_fixture_benign.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": "GATE: PASS \u2014 registered constructed payload {\"correction_count\":128,\"payload_bytes\":1311,",
+      "stdout_file": "raw/registered_fixture_benign.stdout.txt",
+      "stdout_sha256": "fb3b2212830c21f28973ff166ce8c9f30d895aebe81ba5bc80cab54d85d1c79e"
+    },
+    {
+      "actual_exit": 1,
+      "command": [
+        "/usr/local/bin/python3",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/registered_fixture_gate.py",
+        "--sabotage"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_matches": true
+      },
+      "expected_exit": 1,
+      "expected_stderr": "",
+      "expected_stdout": "GATE: FAIL \u2014 planted CRC corruption detected\n",
+      "name": "registered_fixture_crc_sabotage",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/registered_fixture_crc_sabotage.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/registered_fixture_crc_sabotage.stdout.txt",
+      "stdout_sha256": "0ae0f1f5771b189dc31f07e052a9293c2f44dbcf5a5890e8f2f68dea14ff88a6"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "descriptive_reporting_gate.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_matches": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": "GATE: PASS \u2014 all positive/zero/negative cases retained\n",
+      "name": "reporting_benign",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/reporting_benign.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/reporting_benign.stdout.txt",
+      "stdout_sha256": "b51426cf132ea2d0e853b14c0e00fd4949222be3d1fdd154af79e3c249448178"
+    },
+    {
+      "actual_exit": 1,
+      "command": [
+        "/usr/local/bin/python3",
+        "descriptive_reporting_gate.py",
+        "--sabotage"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true,
+        "stdout_matches": true
+      },
+      "expected_exit": 1,
+      "expected_stderr": "",
+      "expected_stdout": "GATE: FAIL \u2014 reporting completeness failure\n",
+      "name": "reporting_sabotage",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/reporting_sabotage.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/reporting_sabotage.stdout.txt",
+      "stdout_sha256": "cd1202abc4926ff31254ce899eced3d636c5f112db21de364582d520eca934e6"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/noise_probe.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "noise_repeat_1",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/noise_repeat_1.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/noise_repeat_1.stdout.txt",
+      "stdout_sha256": "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/noise_probe.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "noise_repeat_2",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/noise_repeat_2.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/noise_repeat_2.stdout.txt",
+      "stdout_sha256": "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "/usr/local/bin/python3",
+        "/Users/sunny/Documents/Codex/2026-10-15/files-pasted-by-the-user-principia/work/egrr-sparse-hhrIXR/repo/reproducibility/egrr_desc_001_termux/noise_probe.py"
+      ],
+      "conditions": {
+        "exit_matches": true,
+        "stderr_matches": true
+      },
+      "expected_exit": 0,
+      "expected_stderr": "",
+      "expected_stdout": null,
+      "name": "noise_repeat_3",
+      "passed": true,
+      "stderr_contains": null,
+      "stderr_file": "raw/noise_repeat_3.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_contains": null,
+      "stdout_file": "raw/noise_repeat_3.stdout.txt",
+      "stdout_sha256": "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc"
+    },
+    {
+      "actual_exit": 0,
+      "command": [
+        "internal exact-byte comparison of noise_repeat_1..3"
+      ],
+      "expected_exit": 0,
+      "name": "noise_three_repeat_equality",
+      "observed_variation": "none",
+      "passed": true,
+      "repeat_stdout_sha256": [
+        "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc",
+        "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc",
+        "7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc"
+      ]
+    }
+  ],
+  "executable": "/usr/local/bin/python3",
+  "identity_errors": [],
+  "identity_ok": true,
+  "instrument_commit": "29c63fe399fa1cbc45974717b8de14a1cd989401",
+  "machine": "arm64",
+  "numpy_version": "2.4.6",
+  "package_sha256_actual": {
+    "reproducibility/egrr_desc_001_termux/README.md": "6cbcb4994717d8e1316394800d8a2ab63e87612f8fdc87ca35282ab3589eecf4",
+    "reproducibility/egrr_desc_001_termux/noise_probe.py": "789ed18ed295b25c28eef7270ceae65b278188ef98476174b7a2680c6eb19bd6",
+    "reproducibility/egrr_desc_001_termux/registered_fixture_gate.py": "df852c993f212e87f8af55f52ea97231644afd9d9cf37242f47a6afe6f70d33d",
+    "reproducibility/egrr_desc_001_termux/requirements-termux.txt": "ee759aa549bb7faa3292caf8aed6095dd6fc49b812e4f0786dfa716c781dc503",
+    "reproducibility/egrr_desc_001_termux/termux_verify.py": "b6bdaffa27c34940d7453d32e957399853f090eabe8185b543049ebb8d1f4950",
+    "reproducibility/egrr_desc_001_termux/test_termux_verify.py": "be08298d1b97a24b30056a3989292977737f8dcba70e692a5dcb8f3236dc106c"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "pytest_version": "9.1.1",
+  "python": "3.14.5 (v3.14.5:5607950ef23, May 10 2026, 07:38:09) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "schema": "EGRR-DESC-001-VERIFY-2",
+  "scientific_status": "DRAFT / NOT FROZEN / NOT RUN",
+  "source_sha256_actual": {
+    "experiments/egrr_issue28/canonical_evidence.py": "c5de9fb5b42b6d6fd103f75b0020bd82195e6f667bf788b9b7237f5a463e9ceb",
+    "experiments/egrr_issue28/case_envelope.py": "bcb4c5289c75a571446a90a35cc021129a49b7d241ece51a5caae2582526fbd5",
+    "experiments/egrr_issue28/covariance_float16.py": "623fac46c82edff9373e4f17f17e4809b5fcc47daf1a0c9bb5ac7af2bae707e4",
+    "experiments/egrr_issue28/descriptive_case_record.py": "522168fb522e40dbe00e5f4659fd5022c123122c5f74b1d02f8ae39a67f5f189",
+    "experiments/egrr_issue28/descriptive_scoring.py": "79b1140dfeb1c0ad717ca3de735a3986285dc0c3b56704211369c83861abae04",
+    "experiments/egrr_issue28/egrr.py": "a73f6b6d8e970995cf2c89d6f6c417d11a27e8776a7a42acbdf121b1dd17e756",
+    "experiments/egrr_issue28/packing.py": "c1fa507ab1ec4b7e493ed5e388bdf31a9bc8a235e8ca5aaaab082ddb36f44097",
+    "experiments/egrr_issue28/storage.py": "1a20b6ec271ec4bb7d47e3d0f65a284559efc83ab2f0a1457e09dbd349b4f6f1",
+    "experiments/egrr_issue28/verified_aggregate.py": "3384fe449c3482b1e86af321674c8ac119714e0cdaf1f95246a013eadbacb69b"
+  },
+  "source_sha256_expected": {
+    "experiments/egrr_issue28/canonical_evidence.py": "c5de9fb5b42b6d6fd103f75b0020bd82195e6f667bf788b9b7237f5a463e9ceb",
+    "experiments/egrr_issue28/case_envelope.py": "bcb4c5289c75a571446a90a35cc021129a49b7d241ece51a5caae2582526fbd5",
+    "experiments/egrr_issue28/covariance_float16.py": "623fac46c82edff9373e4f17f17e4809b5fcc47daf1a0c9bb5ac7af2bae707e4",
+    "experiments/egrr_issue28/descriptive_case_record.py": "522168fb522e40dbe00e5f4659fd5022c123122c5f74b1d02f8ae39a67f5f189",
+    "experiments/egrr_issue28/descriptive_scoring.py": "79b1140dfeb1c0ad717ca3de735a3986285dc0c3b56704211369c83861abae04",
+    "experiments/egrr_issue28/egrr.py": "a73f6b6d8e970995cf2c89d6f6c417d11a27e8776a7a42acbdf121b1dd17e756",
+    "experiments/egrr_issue28/packing.py": "c1fa507ab1ec4b7e493ed5e388bdf31a9bc8a235e8ca5aaaab082ddb36f44097",
+    "experiments/egrr_issue28/storage.py": "1a20b6ec271ec4bb7d47e3d0f65a284559efc83ab2f0a1457e09dbd349b4f6f1",
+    "experiments/egrr_issue28/verified_aggregate.py": "3384fe449c3482b1e86af321674c8ac119714e0cdaf1f95246a013eadbacb69b"
+  },
+  "verification_ok": true,
+  "verification_package_base_commit": "4fd0e25416673e7d75f9dd61f9fe396e043e4fe4"
+}

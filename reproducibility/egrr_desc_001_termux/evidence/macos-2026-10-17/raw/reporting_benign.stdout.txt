@@ -1,0 +1,1 @@
+GATE: PASS — all positive/zero/negative cases retained
