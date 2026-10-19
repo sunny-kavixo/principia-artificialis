@@ -1,0 +1,1 @@
+PASS: six-arm constructed sabotage fixtures
