@@ -19,7 +19,7 @@ population P1 (`E[r] > 0.10`), which remains UNRESOLVED / NOT APPROVED. No
 p-value, confidence interval, type-I-error guarantee, or inferential success
 verdict is part of this study.
 
-## Frozen constants proposed for approval
+## Constants proposed for a future freeze
 
 - Case IDs: exact strings `"000"` through `"099"`, in lexicographic order.
 - Proposed case seeds: `380000` through `380099`, mapped in order to those IDs.
@@ -50,6 +50,14 @@ verdict is part of this study.
 
 No seed in either prohibited range may be generated merely to review or freeze
 this proposal.
+
+These constants are not a registration identity. Before a freeze, an immutable
+artifact must bind each case ID to its seed; source commit and normative file
+SHA-256s; generator and exact draw order; canonical schema; and required Python,
+NumPy and platform identity. The authorized study entrypoint must validate that
+identity before generating or aggregating cases and fail closed on a mismatch.
+The caller-supplied `expected_seeds` mapping in `verified_aggregate.py` is not
+frozen scientific authority.
 
 ## Case matrix and methods
 
@@ -88,6 +96,18 @@ Evidence must retain exact commands, expected and actual exits, raw stdout and
 stderr, environment, dependency versions, Git/source identities, all payload
 and canonical-evidence digests, and every negative/undefined result.
 
+`verified_aggregate.py` checks supplied payload bytes against reported lengths
+and SHA-256s, arm metadata, canonical digests, identities and the reported
+`decode_ok` flag. It does not run the EGR2 decoder on each payload. The future
+authorized entrypoint must run the real decoder on the exact serialized bytes,
+verify shape, K, indices, float16 corrections and reconstructed weights, then
+score decoded calibration and evaluation outputs. It must bind the payload
+digest, decoder/source identity and decode result to the case evidence before
+aggregation; missing or mismatched provenance vetoes the mean. A constructed
+negative test with forged `decode_ok=true` and plausible metadata on non-EGR2
+bytes is proposed for that entrypoint, not implemented or run. Existing aggregate
+tests use arbitrary constructed payload bytes and cannot prove decoder provenance.
+
 Machine-checkable failure contract:
 
 - malformed fixed registration returns global `INSTRUMENT_FAILED` with
@@ -116,24 +136,33 @@ evidence for these predictions.
 - **P2 (D2):** repository deserialization reproduces exactly the registered
   float16-rounded constructed reconstructions. CRC, K, duplicate/out-of-range
   index, shape, or reconstruction sabotage is rejected.
-- **P3 (D3):** the benign structural gate prints `GATE: PASS — benign payload`
-  and exits 0; `--sabotage` prints `GATE: FAIL — planted corruption detected`
-  and exits 1.
-- **P4 (D4):** all 100 registered IDs produce a visible case envelope or an
-  explicit failure. Missing, duplicate, unexpected, malformed, or seed-mismatched
-  inputs block aggregation and remain in the failure manifest.
+- **P3 (D3):** the benign fixture prints stdout beginning
+  `GATE: PASS — registered constructed payload {`, followed by canonical JSON
+  and one newline; it exits 0 with empty stderr. `--sabotage` prints exactly
+  `GATE: FAIL — planted CRC corruption detected` plus one newline on stdout,
+  exits 1 and has empty stderr. These are constructed qualification contracts.
+- **P4 (D4), level A:** the existing constructed 100-record stand-in qualifies
+  completeness and fail-closed logic. Tests cover missing payload sets,
+  duplicate records, altered seed identities, missing arms, altered payloads and
+  digests, and malformed registration. It does not establish scientific cases.
+- **P4 (D4), level B — NOT RUN:** after freeze and separate execution approval,
+  all 100 registered scientific IDs must yield a case envelope or explicit
+  failure. Missing or duplicate records, altered seeds, incomplete evidence and
+  invalid aggregation inputs must block the full-set mean and remain in the
+  manifest. The future entrypoint must explicitly sabotage these conditions and
+  verify rejection; no surviving subset substitutes for the 100.
 - **P5 (D5):** constructed pairs `(0.8,1)`, `(1,1)`, `(1.2,1)` retain signed
   improvements `+0.2`, `0`, `-0.2` within absolute tolerance `1e-12`; deletion
   of the negative record prints the registered failure and exits 1.
 
-Exact qualification commands and registered outcomes:
+Exact constructed qualification commands and expected contracts:
 
-| Prediction | Constructed command | Registered outcome |
+| Prediction | Constructed command | Expected contract |
 |---|---|---|
-| P1, P2, P3 benign | `python reproducibility/egrr_desc_001_termux/registered_fixture_gate.py` | exact 64×32/K=128 metadata, 1,311 bytes, repository-decoder reconstruction; exit 0 |
-| P2, P3 sabotage | same command with `--sabotage` | exact `GATE: FAIL — planted CRC corruption detected`; exit 1 |
+| P1, P2, P3 benign | `python reproducibility/egrr_desc_001_termux/registered_fixture_gate.py` | 64×32/K=128, 1,311 bytes; stdout starts `GATE: PASS — registered constructed payload {` and ends in one newline; empty stderr; exit 0 |
+| P2, P3 sabotage | same command with `--sabotage` | stdout exactly `GATE: FAIL — planted CRC corruption detected` plus one newline; empty stderr; exit 1 |
 | P2 adversarial EGR2 cases | `cd experiments/egrr_issue28 && python -m pytest -q test_egr2_integration.py` | four tests; exit 0 |
-| P4 | `cd experiments/egrr_issue28 && python -m pytest -q test_verified_aggregate.py` | all malformed, missing, duplicate, corrupted and veto cases retained/blocking; exit 0 |
+| P4 level A only | `cd experiments/egrr_issue28 && python -m pytest -q test_verified_aggregate.py` | constructed malformed, missing, duplicate, altered-seed, corrupted and veto cases retained/blocking; exit 0; level B NOT RUN |
 | P5 benign | `cd experiments/egrr_issue28 && python descriptive_reporting_gate.py` | exact pass message; exit 0 |
 | P5 sabotage | same command with `--sabotage` | exact reporting-completeness failure; exit 1 |
 
@@ -215,17 +244,31 @@ The structured JSON SHA-256 is
 This is self-tested macOS engineering evidence, not Android execution,
 cross-platform numerical equivalence or fresh post-freeze confirmation.
 
+Chad Holland's October 19 [Android device report](https://github.com/sunny-kavixo/principia-artificialis/pull/1#issuecomment-6266462875)
+records owner-operated execution from clean detached checkout
+`52915857c8bddee66cf86d48c5c8cbc5807168a5` on Samsung Galaxy S25 Ultra,
+Android 17 ARM64, Termux, Python 3.14.6, NumPy 2.4.4 and pytest 9.1.1.
+The submitted verifier reported `verification_exit=0`, 12/12 checks, 111
+constructed regression tests, four EGR2 integration tests, expected CRC and
+reporting sabotage exits, and three identical C-NOISE stdout byte streams with
+SHA-256 `7f06becf77c6daeb806ec2833f6123e9c777e407f1cac1e089fc664fae901afc`.
+This digest matches the retained macOS constructed-probe report only. The raw
+Android archive remains on the owner's device; its reported SHA-256 is
+`ba7722bfcbc0d60ea5468f99e2bb468b8561a0904c33f32815ce9c6b8f531d8d`.
+It has not been independently retrieved or hash-verified after transfer.
+These are accepted reported engineering checks, not scientific findings.
+
 ## Trigger table (M16)
 
 | Trigger | Control | Answer and proposed disposition |
 |---|---|---|
 | Feasibility | C-FEAS | No — the target is the exact named 100-case set; no external eligibility count determines inclusion. |
-| Noise | C-NOISE | Yes — floating-point/BLAS differences may alter numeric bits. Three exact same-input macOS repeats on constructed seed 902 produced identical payload/MSE evidence and identical stdout SHA-256 `7f06…01afc`, so observed within-environment variation was zero. Exact equality is required only for this deterministic same-process gate; the paired-ratio consistency policy remains `rel_tol=1e-12`, `abs_tol=1e-15`. Chad reported targeted tests on Android, but no cross-platform numerical-bit identity or full-suite equivalence was established. |
+| Noise | C-NOISE | Yes — `noise_probe.py` uses constructed seed 902, magnitude selection, one decoded payload and one MSE on 32 inputs; it does not exercise covariance candidate selection or separate decoded calibration/evaluation scoring. Three same-input repeats were byte-identical on macOS and on the reported Android run; the constructed stdout digest matched across those two reports. A new constructed-only repeated covariance-path probe is required before freeze, using no reserved seed and recording exact command, source hash, environment, exits, raw output and an explicit equality/tolerance policy before execution. It is proposed, not implemented or passed. The paired-ratio consistency policy remains `rel_tol=1e-12`, `abs_tol=1e-15`; complete cross-platform numerical equivalence is unproven. |
 | Statistics | C-STAT | No — no quantity is used to infer a population rate, mean, probability or difference. The exact finite set is described. |
 | Evidence | C-EVID | No — the scientific question is not whether a rule handles evidence freshness; integrity metadata do not certify scientific truth. |
-| Independence | C-INDEP | Yes — Chad independently executed targeted repository tests on Android at `29c63fe` and verified the prior `f96cb12` instrumentation defect as corrected. The EGR2 decoder exercised was the repository decoder, not an independently implemented decoder; no scientific replication is claimed. |
+| Independence | C-INDEP | Yes — the reported Android execution independently ran repository-provided engineering checks at `5291585`. The EGR2 decoder was the repository decoder, not an independently implemented decoder; no scientific replication is claimed. |
 | External | C-EXT | Yes — prior art and Chad Holland's reviews influenced the design. Preserve exact GitHub records/URLs, authorship, dates and hashes; do not reconstruct quotations. |
-| Device | C-DEVICE | Yes — Chad reported Android Termux runtime/version, test count, duration, exit code and two matching source identities. The corrected wrapper has now produced retained raw JSON/stdout/stderr on macOS only. Fresh corrected-wrapper Android artifacts and post-transfer MD5 manifests remain absent, so only Chad's earlier targeted Android scope is independently validated; study execution environment remains undecided. |
+| Device | C-DEVICE | Yes — the corrected wrapper was reported executed on Android 17 ARM64 at `5291585` with Python 3.14.6, NumPy 2.4.4 and pytest 9.1.1; 12/12 checks passed. Raw JSON/stdout/stderr and the archive are retained on the owner's device, not independently retrieved after transfer. C-DEVICE's post-transfer identity check remains outstanding if a transferred archive is relied upon. The future study environment is undecided. |
 | Verdict code | C-BUILD | Yes — missing/malformed inputs deny validity; veto failures block aggregation; benign and sabotage paths must both be run. |
 | Exploration | C-EXPLORE | Yes — F-003 and calibration-only exploration preceded this design. Preserve them as exploratory and never promote them as study evidence. Neither registered seed block has been inspected. |
 | Method comparison | C-METHCOMP | Yes — six methods are compared. The separate methodology-comparison experiment is study-specific and UNRUN; it is not imported as a generic procedure. This registration supplies EGRR's own fixed protocol and controls. |
@@ -235,6 +278,9 @@ review (`pullrequestreview-5546391205`) and bounded-revision review
 (`pullrequestreview-5547377495`) at their exact PR URLs. They remain attributed
 external review statements; they are not reconstructed scientific evidence or
 implied endorsement of the hypothesis.
+The October 19 [engineering report](https://github.com/sunny-kavixo/principia-artificialis/pull/1#issuecomment-6266462875)
+and [read-only P0 review](https://github.com/sunny-kavixo/principia-artificialis/pull/1#issuecomment-6266590730)
+are additional attributed external records, not independent archive custody.
 
 ## Provenance and prior evidence (M13)
 
@@ -257,9 +303,9 @@ outcomes. No raw historical arrays or complete original logs may be invented.
 - Constructed instrument checks were built and run before this final W2 file;
   they are disclosed qualification evidence, not unseen scientific outcomes.
   P1–P5 require a fresh run after any registration freeze (M11).
-- Chad independently reported seven targeted constructed tests passing at the
-  corrected commit on Python 3.14.6 / NumPy 2.4.4 Android Termux. The complete
-  suite and this package's raw JSON/stdout/stderr artifacts were not supplied.
+- The October 19 Android verifier reported the 12/12 corrected-wrapper checks
+  and 111 constructed regression tests passing. Raw Android evidence remains
+  locally retained and has not been independently retrieved after transfer.
 - The EGR2 integration test uses the repository serializer and decoder; it is
   not an independent decoder implementation.
 - CRC32 detects accidental corruption and is not authenticity protection.
@@ -270,34 +316,16 @@ outcomes. No raw historical arrays or complete original logs may be invented.
 - Any invalid case makes the full-set mean unavailable; this may leave the
   descriptive question partly unanswered and must not trigger regeneration.
 
-## Decisions requiring Chad Holland's explicit agreement
+## W2/M16 decisions requiring maintainer review
 
-| # | Decision | Current evidence-bound disposition |
-|---:|---|---|
-| 1 | Descriptive seeds `380000`–`380099` | **PENDING** — acceptable in principle per review, proposed only and never generated; population-P1 `280000`–`280099` stays separate and prohibited. |
-| 2 | Instrument `29c63fe` | **PENDING** — candidate identity; the nine normative implementation SHA-256 values above are unchanged through documentation HEAD `4fd0e25`. Later commits did not change their behavior. |
-| 3 | C-NOISE/C-DEVICE | **PENDING** — three same-input macOS repeats and corrected-wrapper evidence are now retained with zero observed within-environment variation; prior Android evidence covers seven targeted tests only. Fresh corrected-wrapper Android JSON/raw outputs and transfer MD5 manifests remain absent. |
-| 4 | M16 dispositions | **PENDING** — all triggers are answered below; C-METHCOMP is study-specific and its separate protocol remains UNRUN. |
-| 5 | Numerical/failure/evidence contract | **PENDING** — machine-checkable semantics are pinned below; existing constructed qualification is not scientific confirmation. |
-| 6 | Registration-only commit and freeze | **PENDING MAINTAINER AUTHORITY** — do not create the commit or freeze without explicit approval; neither action authorizes execution. |
-
-The detailed requests below expand this table and do not change any PENDING
-item into investigator approval.
-
-1. Accept or revise the exact descriptive block `380000`–`380099`; no seed is
-   touched by making this decision.
-2. Accept `29c63fe` as the proposed instrument identity after reviewing the
-   fail-closed and EGR2 corrections.
-3. Decide whether Chad's targeted Python 3.14.6 Android Termux qualification
-   suffices for C-NOISE/C-DEVICE or whether additional raw/full-suite evidence
-   is required before freeze.
-4. Approve the M16 answers, especially C-DEVICE and the self-contained handling
-   of C-METHCOMP.
-5. Approve the exact failure precedence, tiny-positive warning boundary,
-   canonical schema and evidence package.
-6. Explicitly authorize a separate registration-only commit. That commit still
-   would not authorize study execution; execution requires a subsequent,
-   separate maintainer decision.
+| # | Decision | Existing evidence | Required correction | Current status | Remaining maintainer decision | Execution authorized? |
+|---:|---|---|---|---|---|---|
+| 1 | Descriptive seed IDs | `380000`–`380099` proposed; never generated; `280000`–`280099` reserved for population P1 | Keep the blocks distinct and descriptive seeds ungenerated | Acceptable in principle, not frozen | Accept or revise exact mapping | No |
+| 2 | Normative instrument identity | Android verifier at `5291585` reported nine expected source SHA-256s matching candidate `29c63fe` | Bind immutable source commit/file hashes, case map, generator/draw order, schema and environment at future entrypoint | Candidate qualified for constructed scope | Approve instrument identity and entrypoint authority contract | No |
+| 3 | C-NOISE / C-DEVICE | Three magnitude-probe repeats identical on reported Android; digest matches retained macOS report; Android archive retained locally | Constructed covariance-path repeats before freeze; decide transfer custody and verify digest/identity if transferred | Partial qualification; proposed probe not implemented or run | Approve probe and device evidence threshold | No |
+| 4 | M16 trigger controls | Trigger answers above; independent repository engineering execution; C-METHCOMP study-specific and unrun | Keep C-INDEP scope and C-METHCOMP boundary explicit | Draft answers, pending review | Accept or revise trigger dispositions | No |
+| 5 | Numerical, failure and evidence contracts | Existing constructed fail-closed tests; exact-float encoding; tiny-positive warning; five-level precedence | Separate P4 levels and enforce real decoder provenance, completeness and frozen identity in future study entrypoint | Well-motivated, not freeze-ready | Approve contracts and required entrypoint checks | No |
+| 6 | Registration-only commit and protocol freeze | No approved registration or scientific run | Review corrected draft first; seek separate authorization for registration-only commit and freeze | HOLD | Explicitly authorize registration-only commit/freeze later; execution requires another decision | No |
 
 ## Freeze and execution gate
 
