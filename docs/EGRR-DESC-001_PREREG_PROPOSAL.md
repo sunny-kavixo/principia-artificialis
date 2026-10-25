@@ -108,6 +108,18 @@ negative test with forged `decode_ok=true` and plausible metadata on non-EGR2
 bytes is proposed for that entrypoint, not implemented or run. Existing aggregate
 tests use arbitrary constructed payload bytes and cannot prove decoder provenance.
 
+Before any freeze decision, the constructed qualification package now includes
+two bounded gates. `covariance_noise_gate.py` uses constructed seed `903` only,
+runs the real covariance selector plus decoded calibration and evaluation MSE
+paths three times, and requires exact byte equality of canonical JSON output;
+the benign command exits `0` and `--sabotage` exits `1` with the registered
+repeat-mismatch message. `decoder_provenance_gate.py` first accepts a real EGR2
+payload, then tests plausible `decode_ok=true` metadata over non-EGR2 and
+CRC-corrupted bytes; both must be rejected by the repository decoder with
+structured `SERIALIZATION_ERROR/EGR2_DECODE_FAILED` results and exact details.
+These commands are constructed-only qualification checks and do not generate
+either reserved research seed block.
+
 Machine-checkable failure contract:
 
 - malformed fixed registration returns global `INSTRUMENT_FAILED` with
@@ -165,6 +177,16 @@ Exact constructed qualification commands and expected contracts:
 | P4 level A only | `cd experiments/egrr_issue28 && python -m pytest -q test_verified_aggregate.py` | constructed malformed, missing, duplicate, altered-seed, corrupted and veto cases retained/blocking; exit 0; level B NOT RUN |
 | P5 benign | `cd experiments/egrr_issue28 && python descriptive_reporting_gate.py` | exact pass message; exit 0 |
 | P5 sabotage | same command with `--sabotage` | exact reporting-completeness failure; exit 1 |
+
+Additional constructed-only qualification commands, to be run fresh and
+recorded before a future freeze review:
+
+| Gate | Command | Expected contract |
+|---|---|---|
+| covariance-path repeatability | `python reproducibility/egrr_desc_001_termux/covariance_noise_gate.py` | exact `GATE: PASS — covariance-path repeats byte-identical`; exit 0 |
+| covariance-path sabotage | same command with `--sabotage` | exact `GATE: FAIL — covariance-path repeat mismatch detected`; exit 1 |
+| decoder provenance | `python reproducibility/egrr_desc_001_termux/decoder_provenance_gate.py` | exact `GATE: PASS — decoder provenance accepted`; exit 0 |
+| decoder provenance sabotage | same command with `--sabotage` | exit 1; raw JSON records `SERIALIZATION_ERROR`, `EGR2_DECODE_FAILED`, `invalid format`, and `CRC32 checksum mismatch` |
 
 The pre-existing `structural_gate.py` 16×8/K=8 fixture remains an engineering
 test but is not the registered P1 1,311-byte fixture. The commands above are

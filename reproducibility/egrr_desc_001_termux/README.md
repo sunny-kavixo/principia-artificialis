@@ -66,6 +66,10 @@ Expected individual exit codes:
 | registered fixture planted CRC sabotage, exact message | 1 |
 | positive/zero/negative reporting gate | 0 |
 | planted reporting deletion, exact message | 1 |
+| covariance-path repeatability gate | 0 |
+| covariance-path planted repeat mismatch | 1 |
+| decoder-provenance benign fixture | 0 |
+| forged non-EGR2 and CRC payloads | 1 |
 | same-input noise probe, three repeats | 0 each; exact stdout equal |
 
 The package command exits `0` only when all normative source hashes match and
@@ -80,6 +84,21 @@ The 64×32 fixture uses constructed seed 901 and the C-NOISE probe uses
 constructed seed 902. Neither belongs to a reserved research range. Three
 same-process repeats must be byte-identical. This is a within-environment
 repeatability observation, not cross-platform numerical equivalence.
+
+The covariance-path gate uses constructed seed 903 and runs the actual
+float16-aware covariance selector, EGR2 serializer/decoder, and separate
+decoded calibration/evaluation MSE paths three times. Its policy is exact byte
+equality of the canonical JSON probe output; each run must also report finite
+MSE encodings, shape 64×32 and exactly K=128. `--sabotage` appends a planted
+repeat mismatch and must exit 1 with the registered failure message.
+
+The decoder-provenance gate first accepts one real EGR2 payload, then with
+`--sabotage` supplies plausible metadata and `decode_ok=true` for a non-EGR2
+payload and for CRC-corrupted bytes. The actual repository decoder must reject
+both with status `SERIALIZATION_ERROR`, code `EGR2_DECODE_FAILED`, and details
+`invalid format` and `CRC32 checksum mismatch`, respectively. These checks are
+the proposed pre-aggregation trust boundary; they are constructed fixtures,
+not study evidence.
 
 ## macOS versus Android evidence
 

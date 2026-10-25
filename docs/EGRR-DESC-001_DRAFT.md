@@ -293,11 +293,13 @@ success verdict is part of this descriptive result contract.
 
 C-FEAS: No — no finite external eligibility pool.
 C-NOISE: Yes — floating-point/BLAS reproducibility may
-  vary. A constructed covariance fixture was evaluated three
-  times on one macOS ARM64 environment. All three returned
-  indices (1,2), 41 serialized bytes, MSE 0.029296875,
-  and SHA256 prefix 29da0954767ac6f5.
-  Observed within-fixture spread: zero.
+  vary. The earlier magnitude-path probe is not sufficient because
+  it does not exercise covariance selection or separate decoded
+  calibration/evaluation scoring. The constructed-only covariance
+  gate uses seed 903, runs that path three times, and requires exact
+  byte equality of canonical JSON output plus finite MSEs and exactly
+  K=128. It must be recorded with raw outputs, exits, versions and
+  source hashes before freeze. No reserved research seed is used.
   Cross-platform reproducibility remains unverified.
 C-STAT: No population estimation or inferential verdict
   is proposed. The 100 named cases form the descriptive
@@ -335,7 +337,8 @@ as held-out confirmation.
 ## 11. Freeze-and-run authorization gate
 
 1. Submit this standalone DRAFT for review.
-2. Resolve all open selector, failure and control rules.
+2. Resolve all open selector, failure and control rules, including the
+   constructed covariance-path repeatability and decoder-provenance gates.
 3. Commit a separate freeze-ready registration.
 4. Await explicit subsequent maintainer authorization.
 5. Only then consider running the fixed study.
@@ -346,7 +349,9 @@ is authorized by the current review.
 ## 12. Next unrun checkpoint
 
 Review the proposed descriptive case matrix and the
-remaining control and instrumentation validation before
-any research cases are generated.
+remaining control and instrumentation validation. The next
+constructed-only checks are the covariance-path repeatability
+gate and the decoder-provenance negative gate; neither may
+generate or inspect a research case.
 
 Status remains DESIGN ONLY / NOT RUN.

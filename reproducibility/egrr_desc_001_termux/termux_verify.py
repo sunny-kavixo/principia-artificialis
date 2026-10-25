@@ -40,9 +40,14 @@ EXPECTED_SOURCES = {
 }
 PACKAGE_FILES = (
     "reproducibility/egrr_desc_001_termux/README.md",
+    "experiments/egrr_issue28/covariance_repeatability.py",
+    "experiments/egrr_issue28/decoder_provenance.py",
     "reproducibility/egrr_desc_001_termux/noise_probe.py",
     "reproducibility/egrr_desc_001_termux/registered_fixture_gate.py",
     "reproducibility/egrr_desc_001_termux/requirements-termux.txt",
+    "reproducibility/egrr_desc_001_termux/covariance_noise_gate.py",
+    "reproducibility/egrr_desc_001_termux/covariance_noise_probe.py",
+    "reproducibility/egrr_desc_001_termux/decoder_provenance_gate.py",
     "reproducibility/egrr_desc_001_termux/test_termux_verify.py",
     "reproducibility/egrr_desc_001_termux/termux_verify.py",
 )
@@ -201,7 +206,7 @@ def main() -> int:
              "-p", "test_*.py", "-q"],
             egrr_dir, 0, raw_dir,
             stdout_contains="PASS: six-arm constructed sabotage fixtures",
-            stderr_contains="Ran 111 tests",
+            stderr_contains="Ran 114 tests",
         ),
         run_check(
             "egr2_integration",
@@ -235,6 +240,38 @@ def main() -> int:
             [sys.executable, "descriptive_reporting_gate.py", "--sabotage"],
             egrr_dir, 1, raw_dir,
             expected_stdout="GATE: FAIL — reporting completeness failure\n",
+        ),
+        run_check(
+            "covariance_noise_benign",
+            [sys.executable, str(package_dir / "covariance_noise_gate.py")],
+            root, 0, raw_dir,
+            expected_stdout="GATE: PASS — covariance-path repeats byte-identical\n",
+        ),
+        run_check(
+            "covariance_noise_sabotage",
+            [
+                sys.executable,
+                str(package_dir / "covariance_noise_gate.py"),
+                "--sabotage",
+            ],
+            root, 1, raw_dir,
+            stdout_contains="GATE: FAIL — covariance-path repeat mismatch detected",
+        ),
+        run_check(
+            "decoder_provenance_benign",
+            [sys.executable, str(package_dir / "decoder_provenance_gate.py")],
+            root, 0, raw_dir,
+            expected_stdout="GATE: PASS — decoder provenance accepted\n",
+        ),
+        run_check(
+            "decoder_provenance_sabotage",
+            [
+                sys.executable,
+                str(package_dir / "decoder_provenance_gate.py"),
+                "--sabotage",
+            ],
+            root, 1, raw_dir,
+            stdout_contains="GATE: FAIL — forged decoder provenance rejected",
         ),
     ]
     for repeat in range(1, 4):
